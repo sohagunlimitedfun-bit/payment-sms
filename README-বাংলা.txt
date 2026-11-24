@@ -1,22 +1,7 @@
 নোয়াপাড়া বাজার – Payment SMS Maker (Android)
 
-এই প্রজেক্টে আপনার দেওয়া index.html ফাইলটি Android অ্যাপের ভেতরে রাখা হয়েছে।
-অ্যাপটি অফলাইনে চলে; SMS Preview, Copy এবং Share সুবিধা Android-এর সাথে যুক্ত।
+সংস্করণ 1.2: প্রতিটি বকেয়া মাসের পাশে আলাদা টাকার ইনপুট, নিজস্ব অ্যাপ আইকন, SMS Preview, Copy, Share এবং Print সুবিধা।
 
-APK বানানোর সহজ পদ্ধতি:
-১. ZIP ফাইলটি GitHub-এ নতুন repository হিসেবে আপলোড করুন।
-২. GitHub repository-তে Actions ট্যাব খুলুন।
-৩. "Build Android APK" workflow চালু করুন (প্রথম push-এও নিজে থেকে চলবে)।
-৪. কাজ শেষ হলে workflow run খুলে Artifacts থেকে Noapara-Payment-SMS-APK ডাউনলোড করুন।
-৫. ZIP-এর ভেতরের app-debug.apk ফোন ও ট্যাবলেটে ইনস্টল করুন।
-   Android-এ ইনস্টল করার সময় প্রয়োজন হলে এই ফাইলের জন্য "Install unknown apps" অনুমতি দিন।
+APK তৈরি: GitHub-এ প্রজেক্টের সব ফাইল মূল repository root-এ আপলোড/replace করুন। .github/workflows/main.yml-ও অন্তর্ভুক্ত রাখুন। এরপর Actions থেকে Build Android APK চালান। সফল হলে Artifacts থেকে Noapara-Payment-SMS-APK ডাউনলোড করে ZIP Extract করুন।
 
-Android Studio থাকলে:
-- এই ফোল্ডারটি Open করুন।
-- Gradle sync শেষ হলে Build > Build Bundle(s) / APK(s) > Build APK(s) নির্বাচন করুন।
-- APK পাওয়া যাবে app/build/outputs/apk/debug/app-debug.apk পথে।
-
-নোট:
-- এটি debug APK; ব্যক্তিগত ব্যবহার/পরীক্ষার জন্য।
-- HTML-এ থাকা মূল ফর্ম ও ডিজাইন অপরিবর্তিত রাখা হয়েছে।
-- APK বানানোর আগে/পরে আসল দোকানদারের তথ্য দিয়ে পরীক্ষা করুন।
+Print চাপলে Android-এর system print dialog খুলবে। প্রিন্টার বা PDF হিসেবে Save নির্বাচন করা যাবে (ডিভাইস/Android print service সমর্থন সাপেক্ষে)।

@@ -14,7 +14,9 @@ button{border:0;border-radius:9px;padding:12px 16px;font-size:15px;font-weight:7
 .months{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.chip{background:#e2e8f0;color:#1e293b;padding:7px 10px;border-radius:20px;font-size:14px}
 .chip button{background:transparent;color:#991b1b;padding:0 0 0 7px}
 .preview{white-space:pre-wrap;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:14px;min-height:130px;margin-top:8px}
-.actions{display:flex;gap:10px;margin-top:14px}.actions button{flex:1}.secondary{background:#1d4ed8}
+.actions{display:flex;gap:10px;margin-top:14px}.actions button{flex:1}.secondary{background:#1d4ed8}.print{background:#475569}
+.month-item{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#e2e8f0;color:#1e293b;padding:7px 10px;border-radius:12px;font-size:14px}.month-item .amount{width:112px;padding:7px 9px;font-size:15px;margin:0}.month-item .month-name{font-weight:600}
+@media print{body{background:#fff;padding:0}main{box-shadow:none;border-radius:0;max-width:none;padding:0}.actions,.monthrow button,.chip button{display:none!important}}
 </style>
 </head>
 <body><main>
@@ -32,19 +34,21 @@ button{border:0;border-radius:9px;padding:12px 16px;font-size:15px;font-weight:7
 <div class="months" id="months"></div>
 <label>তারিখ</label><input id="date" type="date">
 <label>SMS Preview</label><div class="preview" id="preview"></div>
-<div class="actions"><button onclick="copySms()">Copy</button><button class="secondary" onclick="shareSms()">Share</button></div>
+<div class="actions"><button onclick="copySms()">Copy</button><button class="secondary" onclick="shareSms()">Share</button><button class="print" onclick="printSms()">Print</button></div>
 </main>
 <script>
 const selected=[];
+const amounts={};
 const $=id=>document.getElementById(id);
 function addMonth(){const m=$('month').value;if(m&&!selected.includes(m)){selected.push(m);renderMonths();update();}$('month').value='';}
-function removeMonth(m){const i=selected.indexOf(m);if(i>-1)selected.splice(i,1);renderMonths();update();}
-function renderMonths(){$('months').innerHTML='';selected.forEach(m=>{const s=document.createElement('span');s.className='chip';s.textContent=m+' ';const b=document.createElement('button');b.type='button';b.textContent='×';b.onclick=()=>removeMonth(m);s.appendChild(b);$('months').appendChild(s);});}
+function removeMonth(m){const i=selected.indexOf(m);if(i>-1)selected.splice(i,1);delete amounts[m];renderMonths();update();}
+function renderMonths(){$('months').innerHTML='';selected.forEach(m=>{const s=document.createElement('div');s.className='month-item';const label=document.createElement('span');label.className='month-name';label.textContent=m+' — ৳';const amount=document.createElement('input');amount.className='amount';amount.type='number';amount.min='0';amount.step='0.01';amount.inputMode='decimal';amount.placeholder='টাকার পরিমাণ';amount.setAttribute('aria-label',m+' মাসের টাকার পরিমাণ');amount.value=amounts[m]??'';amount.addEventListener('input',()=>{amounts[m]=amount.value;update();});const b=document.createElement('button');b.type='button';b.textContent='×';b.setAttribute('aria-label',m+' বাদ দিন');b.onclick=()=>removeMonth(m);s.append(label,amount,b);$('months').appendChild(s);});}
 function sms(){const date=$('date').value;const niceDate=date?new Date(date+'T00:00:00').toLocaleDateString('bn-BD'):'';
-return ['নোয়াপাড়া বাজার','দোকানদারের নাম: '+$('name').value,'ব্যবসার ধরন: '+$('business').value,'বিল আইডি: '+$('bill').value,'বকেয়া মাস: '+(selected.join(', ')||'উল্লেখ নেই'),'তারিখ: '+niceDate,'ধন্যবাদ।'].join('\n');}
+return ['নোয়াপাড়া বাজার','দোকানদারের নাম: '+$('name').value,'ব্যবসার ধরন: '+$('business').value,'বিল আইডি: '+$('bill').value,'বকেয়া মাস: '+(selected.map(m=>m+' ৳ '+(amounts[m]||'টাকা দেওয়া হয়নি')).join(', ')||'উল্লেখ নেই'),'তারিখ: '+niceDate,'ধন্যবাদ।'].join('\n');}
 function update(){$('preview').textContent=sms();}
 ['name','business','bill','date'].forEach(id=>$(id).addEventListener('input',update));
 function copySms(){const t=sms();if(window.AndroidBridge)AndroidBridge.copyText(t);else navigator.clipboard.writeText(t).then(()=>alert('কপি হয়েছে'));}
 function shareSms(){const t=sms();if(window.AndroidBridge)AndroidBridge.shareText(t);else if(navigator.share)navigator.share({text:t});else alert('এই ব্রাউজারে Share সুবিধা নেই');}
+function printSms(){const t=sms();if(window.AndroidBridge)AndroidBridge.printText(t);else window.print();}
 update();
 </script></body></html>
