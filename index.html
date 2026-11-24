@@ -16,7 +16,23 @@ button{border:0;border-radius:9px;padding:12px 16px;font-size:15px;font-weight:7
 .preview{white-space:pre-wrap;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:14px;min-height:130px;margin-top:8px}
 .actions{display:flex;gap:10px;margin-top:14px}.actions button{flex:1}.secondary{background:#1d4ed8}.print{background:#475569}
 .month-item{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#e2e8f0;color:#1e293b;padding:7px 10px;border-radius:12px;font-size:14px}.month-item .amount{width:112px;padding:7px 9px;font-size:15px;margin:0}.month-item .month-name{font-weight:600}
-@media print{body{background:#fff;padding:0}main{box-shadow:none;border-radius:0;max-width:none;padding:0}.actions,.monthrow button,.chip button{display:none!important}}
+#printReceipt{display:none}
+@media print{
+  @page{size:auto;margin:10mm}
+  body{background:#fff;padding:0;color:#111}
+  body>*{display:none!important}
+  #printReceipt{display:block!important;max-width:320px;margin:0 auto;padding:14px 12px;font-family:system-ui,'Noto Sans Bengali',sans-serif;color:#111}
+  #printReceipt .receipt-head{text-align:center;border-bottom:1px dashed #555;padding-bottom:10px;margin-bottom:10px}
+  #printReceipt h2{font-size:19px;margin:0 0 3px;color:#111}
+  #printReceipt .receipt-sub{font-size:12px;margin:0;color:#333}
+  #printReceipt .receipt-title{text-align:center;font-weight:700;font-size:15px;margin:10px 0}
+  #printReceipt .receipt-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin:6px 0}
+  #printReceipt .receipt-label{color:#333}
+  #printReceipt .receipt-months{border-top:1px dashed #777;border-bottom:1px dashed #777;padding:8px 0;margin:10px 0}
+  #printReceipt .receipt-month{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:3px 0}
+  #printReceipt .receipt-total{font-weight:700;font-size:15px;border-top:1px solid #333;padding-top:8px;margin-top:8px}
+  #printReceipt .receipt-foot{text-align:center;font-size:11px;margin-top:14px;border-top:1px dashed #777;padding-top:9px}
+}
 </style>
 </head>
 <body><main>
@@ -36,6 +52,7 @@ button{border:0;border-radius:9px;padding:12px 16px;font-size:15px;font-weight:7
 <label>SMS Preview</label><div class="preview" id="preview"></div>
 <div class="actions"><button onclick="copySms()">Copy</button><button class="secondary" onclick="shareSms()">Share</button><button class="print" onclick="printSms()">Print</button></div>
 </main>
+<section id="printReceipt" aria-hidden="true"></section>
 <script>
 const selected=[];
 const amounts={};
@@ -49,6 +66,49 @@ function update(){$('preview').textContent=sms();}
 ['name','business','bill','date'].forEach(id=>$(id).addEventListener('input',update));
 function copySms(){const t=sms();if(window.AndroidBridge)AndroidBridge.copyText(t);else navigator.clipboard.writeText(t).then(()=>alert('কপি হয়েছে'));}
 function shareSms(){const t=sms();if(window.AndroidBridge)AndroidBridge.shareText(t);else if(navigator.share)navigator.share({text:t});else alert('এই ব্রাউজারে Share সুবিধা নেই');}
-function printSms(){const t=sms();if(window.AndroidBridge)AndroidBridge.printText(t);else window.print();}
+function receiptText(){
+ const date=$('date').value;
+ const niceDate=date?new Date(date+'T00:00:00').toLocaleDateString('bn-BD'):'উল্লেখ নেই';
+ const rows=selected.map(m=>'  '+m+' : ৳ '+(amounts[m]||'টাকা দেওয়া হয়নি'));
+ const total=selected.reduce((sum,m)=>sum+(Number(amounts[m])||0),0);
+ return [
+  '       নোয়াপাড়া বাজার',
+  '       বিল/পেমেন্ট বিবরণ',
+  '--------------------------------',
+  'দোকানদার: '+($('name').value||'উল্লেখ নেই'),
+  'ব্যবসার ধরন: '+($('business').value||'উল্লেখ নেই'),
+  'বিল আইডি: '+($('bill').value||'উল্লেখ নেই'),
+  'তারিখ: '+niceDate,
+  '--------------------------------',
+  'মাসভিত্তিক টাকার পরিমাণ:',
+  ...(rows.length?rows:['  কোনো মাস যোগ করা হয়নি']),
+  '--------------------------------',
+  'মোট: ৳ '+total.toLocaleString('bn-BD'),
+  '',
+  '       ধন্যবাদ',
+  '       নোয়াপাড়া বাজার'
+ ].join('\n');
+}
+function printSms(){
+ const date=$('date').value;
+ const niceDate=date?new Date(date+'T00:00:00').toLocaleDateString('bn-BD'):'উল্লেখ নেই';
+ const total=selected.reduce((sum,m)=>sum+(Number(amounts[m])||0),0);
+ const receipt=$('printReceipt');
+ const monthRows=selected.map(m=>'<div class="receipt-month"><span>'+escapeHtml(m)+'</span><strong>৳ '+escapeHtml(amounts[m]||'—')+'</strong></div>').join('');
+ receipt.innerHTML=
+  '<div class="receipt-head"><h2>নোয়াপাড়া বাজার</h2><p class="receipt-sub">বিল/পেমেন্ট বিবরণ</p></div>'+
+  '<div class="receipt-row"><span class="receipt-label">দোকানদার</span><strong>'+escapeHtml($('name').value||'উল্লেখ নেই')+'</strong></div>'+
+  '<div class="receipt-row"><span class="receipt-label">ব্যবসার ধরন</span><span>'+escapeHtml($('business').value||'উল্লেখ নেই')+'</span></div>'+
+  '<div class="receipt-row"><span class="receipt-label">বিল আইডি</span><span>'+escapeHtml($('bill').value||'উল্লেখ নেই')+'</span></div>'+
+  '<div class="receipt-row"><span class="receipt-label">তারিখ</span><span>'+escapeHtml(niceDate)+'</span></div>'+
+  '<div class="receipt-months">'+(monthRows||'<div class="receipt-month">কোনো মাস যোগ করা হয়নি</div>')+'</div>'+
+  '<div class="receipt-row receipt-total"><span>মোট</span><strong>৳ '+total.toLocaleString('bn-BD')+'</strong></div>'+
+  '<div class="receipt-foot">ধন্যবাদ<br>নোয়াপাড়া বাজার</div>';
+ if(window.AndroidBridge) AndroidBridge.printText(receiptText());
+ else window.print();
+}
+function escapeHtml(value){
+ return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 update();
 </script></body></html>
