@@ -25,12 +25,15 @@ jobs:
       - name: Prepare Android project
         run: |
           mkdir -p app/src/main/assets
+          mkdir -p app/src/main/res/mipmap
           mkdir -p app/src/main/java/com/noapara/paymentsms
 
           cp build.gradle app/build.gradle
           cp AndroidManifest.xml app/src/main/AndroidManifest.xml
           cp MainActivity.java app/src/main/java/com/noapara/paymentsms/MainActivity.java
           cp index.html app/src/main/assets/index.html
+
+          cp ic_launcher.png app/src/main/res/mipmap/ic_launcher.png
 
           cat > build.gradle <<'EOF'
           plugins {
