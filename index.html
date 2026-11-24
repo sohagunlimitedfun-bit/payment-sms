@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>নোয়াপাড়া বাজার - Payment SMS</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,'Noto Sans Bengali',sans-serif;background:#f3f5f7;margin:0;padding:18px;color:#18212b}
+main{max-width:560px;margin:auto;background:white;padding:20px;border-radius:16px;box-shadow:0 4px 18px #0001}
+h2{text-align:center;margin:0 0 5px;color:#14532d}p.sub{text-align:center;color:#64748b;margin:0 0 20px}
+label{display:block;font-weight:600;margin:13px 0 6px}input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font-size:16px;background:white}
+.monthrow{display:flex;gap:8px}.monthrow select{flex:1}.monthrow button{width:auto}
+button{border:0;border-radius:9px;padding:12px 16px;font-size:15px;font-weight:700;background:#166534;color:white;cursor:pointer}
+.months{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.chip{background:#e2e8f0;color:#1e293b;padding:7px 10px;border-radius:20px;font-size:14px}
+.chip button{background:transparent;color:#991b1b;padding:0 0 0 7px}
+.preview{white-space:pre-wrap;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:14px;min-height:130px;margin-top:8px}
+.actions{display:flex;gap:10px;margin-top:14px}.actions button{flex:1}.secondary{background:#1d4ed8}
+</style>
+</head>
+<body><main>
+<h2>নোয়াপাড়া বাজার</h2><p class="sub">Payment SMS Maker</p>
+<label>দোকানদারের নাম</label><input id="name" placeholder="নাম লিখুন">
+<label>ব্যবসার ধরন</label><input id="business" placeholder="যেমন: মুদি দোকান">
+<label>বিল আইডি</label><input id="bill" placeholder="বিল আইডি লিখুন">
+<label>বকেয়া মাস যোগ করুন</label>
+<div class="monthrow"><select id="month">
+<option value="">মাস নির্বাচন করুন</option>
+<option>জানুয়ারি</option><option>ফেব্রুয়ারি</option><option>মার্চ</option><option>এপ্রিল</option>
+<option>মে</option><option>জুন</option><option>জুলাই</option><option>আগস্ট</option>
+<option>সেপ্টেম্বর</option><option>অক্টোবর</option><option>নভেম্বর</option><option>ডিসেম্বর</option>
+</select><button type="button" onclick="addMonth()">যোগ করুন</button></div>
+<div class="months" id="months"></div>
+<label>তারিখ</label><input id="date" type="date">
+<label>SMS Preview</label><div class="preview" id="preview"></div>
+<div class="actions"><button onclick="copySms()">Copy</button><button class="secondary" onclick="shareSms()">Share</button></div>
+</main>
+<script>
+const selected=[];
+const $=id=>document.getElementById(id);
+function addMonth(){const m=$('month').value;if(m&&!selected.includes(m)){selected.push(m);renderMonths();update();}$('month').value='';}
+function removeMonth(m){const i=selected.indexOf(m);if(i>-1)selected.splice(i,1);renderMonths();update();}
+function renderMonths(){$('months').innerHTML='';selected.forEach(m=>{const s=document.createElement('span');s.className='chip';s.textContent=m+' ';const b=document.createElement('button');b.type='button';b.textContent='×';b.onclick=()=>removeMonth(m);s.appendChild(b);$('months').appendChild(s);});}
+function sms(){const date=$('date').value;const niceDate=date?new Date(date+'T00:00:00').toLocaleDateString('bn-BD'):'';
+return ['নোয়াপাড়া বাজার','দোকানদারের নাম: '+$('name').value,'ব্যবসার ধরন: '+$('business').value,'বিল আইডি: '+$('bill').value,'বকেয়া মাস: '+(selected.join(', ')||'উল্লেখ নেই'),'তারিখ: '+niceDate,'ধন্যবাদ।'].join('\n');}
+function update(){$('preview').textContent=sms();}
+['name','business','bill','date'].forEach(id=>$(id).addEventListener('input',update));
+function copySms(){const t=sms();if(window.AndroidBridge)AndroidBridge.copyText(t);else navigator.clipboard.writeText(t).then(()=>alert('কপি হয়েছে'));}
+function shareSms(){const t=sms();if(window.AndroidBridge)AndroidBridge.shareText(t);else if(navigator.share)navigator.share({text:t});else alert('এই ব্রাউজারে Share সুবিধা নেই');}
+update();
+</script></body></html>
